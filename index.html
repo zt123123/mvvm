@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+</head>
+<body>
+	<div id="app">
+		<input type="text" id="input" my-model="name">
+		{{age}}---{{name}}
+		<div>
+			{{name}}
+		</div>
+	</div>
+	<script>
+		let obj={
+			name:new ViewModel("张天"),
+			age:new ViewModel(23)
+		}
+
+		function ViewModel(data) {
+			this.data=data
+			this.nodes=[]
+		}
+
+
+		ViewModel.prototype.update = function() {
+			this.nodes.forEach((node)=>{
+				if(node.nodeType==1){
+					node.value=this.data
+				}else{
+					node.textContent=node.textContent.replace(/\{\{([^}]*)\}\}/g,function(){
+						return obj[arguments[1]].data
+					})
+				}
+			})
+		};
+
+		ViewModel.prototype.bindNode = function(node) {
+			this.nodes.push(node)
+		};
+
+		function compile(el) {
+			let ele = document.querySelector(el);
+			let fragment=document.createDocumentFragment();
+
+			let child;
+			while(child=ele.firstChild){
+				fragment.appendChild(child)
+			}
+
+			replace(fragment)
+
+			ele.appendChild(fragment)
+		}
+
+		function replace(fragment) {
+			Array.from(fragment.childNodes).forEach((node)=>{
+				if(node.nodeType==1){
+					Array.from(node.attributes).forEach((attr)=>{
+						let {name,value}=attr;
+						if(name.includes("my-model")){
+							obj[value].bindNode(node)
+						}
+					});
+				}
+				let reg=/\{\{([^}]*)\}\}/g
+				let text=node.textContent
+				if(node.nodeType==3&&reg.test(node.textContent)){
+					text.replace(reg,function(){
+						obj[arguments[1]].bindNode(node);
+					})
+				}
+				if(node.childNodes.length){
+					replace(node)
+				}
+			})
+		}
+
+		compile("#app")
+
+		Object.keys(obj).forEach((key)=>{
+			obj[key].update()
+		})
+
+	</script>
+</body>
+</html>
