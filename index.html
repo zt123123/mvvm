@@ -40,6 +40,13 @@
 			this.nodes.push(node)
 		};
 
+		ViewModel.prototype.setValue = function(newVal) {
+			if(newVal!=this.data){
+				this.data=newVal
+				this.update()
+			}
+		};
+
 		function compile(el) {
 			let ele = document.querySelector(el);
 			let fragment=document.createDocumentFragment();
